@@ -218,7 +218,7 @@ void boot_screen() {
     tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
     tft.setTextSize(FM);
     tft.drawPixel(0, 0, bruceConfig.bgColor);
-    tft.drawCentreString("Bruce", tftWidth / 2, 10, 1);
+    tft.drawCentreString("Codex-V", tftWidth / 2, 10, 1);
     tft.setTextSize(FP);
     tft.drawCentreString(BRUCE_VERSION, tftWidth / 2, 25, 1);
     tft.setTextSize(FM);
@@ -280,8 +280,14 @@ void boot_screen_anim() {
             drawn = true;
         }
 #if !defined(LITE_VERSION)
-        if (!boot_img && (millis() - i > 2200) && (millis() - i) < 2700)
-            tft.drawRect(2 * tftWidth / 3, tftHeight / 2, 2, 2, bruceConfig.priColor);
+        if (!boot_img && (millis() - i > 2200) && (millis() - i) < 2700) {
+            // CP Animation: Processing indicators
+            int progress = ((millis() - i - 2200) * 10) / 500; // 0-10 over 500ms
+            for (int j = 0; j < progress; j++) {
+                tft.fillRect(tftWidth/2 - 50 + j*10, tftHeight/2 + 20, 8, 4, TFT_RED);
+            }
+            tft.drawString("Processing...", tftWidth/2 - 40, tftHeight/2 + 30, 1);
+        }
         if (!boot_img && (millis() - i > 2700) && (millis() - i) < 2900)
             tft.fillRect(0, 45, tftWidth, tftHeight - 45, bruceConfig.bgColor);
         if (!boot_img && (millis() - i > 2900) && (millis() - i) < 3400)
@@ -294,7 +300,17 @@ void boot_screen_anim() {
                 bruceConfig.bgColor,
                 bruceConfig.priColor
             );
-        if (!boot_img && (millis() - i > 3400) && (millis() - i) < 3600) tft.fillScreen(bruceConfig.bgColor);
+        if (!boot_img && (millis() - i > 3400) && (millis() - i) < 3600) {
+            tft.fillScreen(bruceConfig.bgColor);
+            // CP Animation: CPU activity indicators
+            int cycle = (millis() - i - 3400) / 50; // Changes every 50ms
+            for (int k = 0; k < 4; k++) {
+                int brightness = (cycle + k) % 4;
+                uint16_t color = brightness == 0 ? TFT_DARKGREY : (brightness == 1 ? TFT_RED : (brightness == 2 ? TFT_YELLOW : TFT_GREEN));
+                tft.fillCircle(tftWidth/2 - 30 + k*20, tftHeight/2, 5, color);
+            }
+            tft.drawString("Initializing Codex-V...", tftWidth/2 - 60, tftHeight/2 + 20, 1);
+        }
         if (!boot_img && (millis() - i > 3600))
             tft.drawXBitmap(
                 (tftWidth - 238) / 2,
@@ -398,7 +414,7 @@ void setup() {
     tft.setRotation(bruceConfig.rotation);
     tft.fillScreen(TFT_BLACK);
     // bruceConfig is not read yet.. just to show something on screen due to long boot time
-    tft.setTextColor(TFT_PURPLE, TFT_BLACK);
+    tft.setTextColor(TFT_RED, TFT_BLACK);
     tft.drawCentreString("Booting", tft.width() / 2, tft.height() / 2, 1);
 #else
     tft.begin();

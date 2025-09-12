@@ -108,7 +108,7 @@ void ReverseShell() {
             tcpClient = tcpServer.available();
             if (tcpClient) {
                 tft.println("Client connected.");
-                tcpClient.println("~Welcome to BruceShell.");
+                tcpClient.println("~Hi, Ved! Welcome to Codex-V Shell.");
                 tcpClient.println("~Developed by Fourier (github.com/9dl)");
                 shellConnected = true;
             }
