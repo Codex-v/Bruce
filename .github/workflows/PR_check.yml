@@ -81,10 +81,13 @@ jobs:
           restore-keys: |
                 Bruce-pio-${{ matrix.board.env }}-
 
-      - name: Install PlatformIO Core
+      - name: Install Dependencies
         run: |
-          pip install platformio intelhex
+          pip install --upgrade pip
+          pip install platformio intelhex requests esptool
 
+      - name: Configure Build Version
+        run: |
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
             version=${{ github.ref_name }}
           else
@@ -94,11 +97,19 @@ jobs:
           sed -i "s/-DBRUCE_VERSION=/-DBRUCE_VERSION='\"$version\"' ; /g" ./platformio.ini
           sed -i "s/-DGIT_COMMIT_HASH='\"Homebrew\"'/\!echo '-DGIT_COMMIT_HASH=\\\\\\\\\"'\$\(git describe --always --dirty)'\\\\\\\\\"'/g" ./platformio.ini
 
+          echo "Updated platformio.ini with version: $version"
           cat ./platformio.ini
 
-      - name: Run Compile
+      - name: Build Firmware
         run: |
+          echo "Building firmware for ${{ matrix.board.name }}"
           platformio run -e ${{ matrix.board.env }}
+
+      - name: Build Filesystem (Optional)
+        continue-on-error: true
+        run: |
+          echo "Building filesystem for ${{ matrix.board.name }}"
+          platformio run -e ${{ matrix.board.env }} -t buildfs
 
       - name: Cache PIO
         uses: actions/cache/save@v4
@@ -107,14 +118,28 @@ jobs:
             ${{ github.workspace }}/.pio
           key: Bruce-pio-${{ matrix.board.env }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      # - name: Merge Files
-      #   run: |
-      #    pio run -e ${{ matrix.board.env }} -t build-firmware
+      - name: Create Build Manifest
+        run: |
+          echo "Creating build manifest for ${{ matrix.board.name }}"
+          if [ -f ".pio/build/${{ matrix.board.env }}/firmware.bin" ]; then
+            cp ".pio/build/${{ matrix.board.env }}/firmware.bin" "Bruce-${{ matrix.board.env }}.bin"
+          fi
 
-      - name: Upload ${{ matrix.board.name }}
+          # Create a simple manifest
+          echo "{\"board\": \"${{ matrix.board.name }}\", \"env\": \"${{ matrix.board.env }}\", \"built\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}" > "Bruce-${{ matrix.board.env }}.json"
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Bruce-${{ matrix.board.env }}
-          path: Bruce-*.bin
-          retention-days: 5
+          path: |
+            Bruce-*.bin
+            Bruce-*.json
+          retention-days: 7
           if-no-files-found: error
+
+      - name: Build Summary
+        run: |
+          echo "✅ Successfully built ${{ matrix.board.name }}"
+          echo "Environment: ${{ matrix.board.env }}"
+          ls -la Bruce-* 2>/dev/null || echo "No Bruce files found"
