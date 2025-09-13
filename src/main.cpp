@@ -142,6 +142,21 @@ volatile int tftHeight = VECTOR_DISPLAY_DEFAULT_WIDTH;
 #include "modules/rf/rf_utils.h"                 // for initCC1101once
 #include <Wire.h>
 
+// Arrow bitmap definition
+#define ARROW_WIDTH 64
+#define ARROW_HEIGHT 16
+static const unsigned char arrow_bits[] PROGMEM = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x81, 0x81, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x81, 0x81, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x81, 0x81, 0x00, 0x00, 0x00, 0x00,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00,
+    0x00, 0x00, 0x81, 0x81, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x81, 0x81, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00
+};
+
 /*********************************************************************
  **  Function: begin_storage
  **  Config LittleFS and SD storage
@@ -263,7 +278,9 @@ void boot_screen() {
  **  Function: boot_screen_anim
  **  Draw boot screen
  *********************************************************************/
-void boot_screen_anim() {
+
+
+ void boot_screen_anim() {
     boot_screen();
     int i = millis();
 
@@ -335,7 +352,21 @@ void boot_screen_anim() {
                 bruceConfig.priColor
             );
         if (!boot_img && (millis() - i > 3400) && (millis() - i) < 3600) tft.fillScreen(bruceConfig.bgColor);
-        if (!boot_img && (millis() - i > 3600))
+
+        // NEW: Show Arrow Bitmap after 3.8s
+        if (!boot_img && (millis() - i > 3800) && (millis() - i) < 6000) {
+            tft.drawXBitmap(
+                (screenWidth - ARROW_WIDTH) / 2,
+                (screenHeight - ARROW_HEIGHT) / 2 + 40,
+                arrow_bits,
+                ARROW_WIDTH,
+                ARROW_HEIGHT,
+                bruceConfig.priColor,
+                bruceConfig.bgColor
+            );
+        }
+
+        if (!boot_img && (millis() - i > 6000))
             tft.drawXBitmap(
                 (screenWidth - 238) / 2,
                 (screenHeight - 133) / 2,
@@ -357,6 +388,8 @@ void boot_screen_anim() {
     // Clear splashscreen
     tft.fillScreen(bruceConfig.bgColor);
 }
+
+
 
 /*********************************************************************
  **  Function: init_clock
