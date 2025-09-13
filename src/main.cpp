@@ -215,16 +215,41 @@ void begin_tft() {
  **  Draw boot screen
  *********************************************************************/
 void boot_screen() {
+    // Clear screen with background color
+    tft.fillScreen(bruceConfig.bgColor);
+
+    // === Project Title ===
     tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
-    tft.setTextSize(FM);
-    tft.drawPixel(0, 0, bruceConfig.bgColor);
-    tft.drawCentreString("Bruce", tftWidth / 2, 10, 1);
-    tft.setTextSize(FP);
-    tft.drawCentreString(BRUCE_VERSION, tftWidth / 2, 25, 1);
-    tft.setTextSize(FM);
-    tft.drawCentreString(
-        "PREDATORY FIRMWARE", tftWidth / 2, tftHeight + 2, 1
-    ); // will draw outside the screen on non touch devices
+    tft.setTextSize(3); // Bigger for the title
+    tft.drawCentreString("Codex-V", tftWidth / 2, tftHeight / 4, 1);
+
+    // === Tagline ===
+    tft.setTextSize(1);
+    tft.drawCentreString("Ghost in the Code", tftWidth / 2, (tftHeight / 4) + 25, 1);
+
+    // === Version Info ===
+    tft.setTextSize(2);
+    String verInfo = "Build 007";
+    tft.drawCentreString(verInfo, tftWidth / 2, (tftHeight / 2), 1);
+
+    // === Loading Bar ===
+    int barWidth = tftWidth - 40;
+    int barHeight = 10;
+    int barX = 20;
+    int barY = (tftHeight / 2) + 30;
+
+    // Draw empty bar
+    tft.drawRect(barX, barY, barWidth, barHeight, bruceConfig.priColor);
+
+    // Fill bar gradually (fake animation)
+    for (int i = 0; i <= barWidth - 2; i += 4) {
+        tft.fillRect(barX + 1, barY + 1, i, barHeight - 2, bruceConfig.priColor);
+        delay(15); // speed of animation
+    }
+
+    // === Footer / Author ===
+    tft.setTextSize(1);
+    tft.drawCentreString("by CP", tftWidth / 2, tftHeight - 15, 1);
 }
 
 /*********************************************************************
@@ -399,7 +424,7 @@ void setup() {
     tft.fillScreen(TFT_BLACK);
     // bruceConfig is not read yet.. just to show something on screen due to long boot time
     tft.setTextColor(TFT_PURPLE, TFT_BLACK);
-    tft.drawCentreString("Booting", tft.width() / 2, tft.height() / 2, 1);
+    tft.drawCentreString("Your Secrets Aren't Safe", tft.width() / 2, tft.height() / 2, 1);
 #else
     tft.begin();
 #endif
