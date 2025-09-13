@@ -232,7 +232,7 @@ void boot_screen() {
 
     // === Tagline ===
     tft.setTextSize(1);
-    tft.drawCentreString("Build 007", screenWidth / 2, (screenHeight / 4) + 25, 1);
+    tft.drawCentreString("007", screenWidth / 2, (screenHeight / 4) + 25, 1);
 
     // === Version Info ===
     tft.setTextSize(2);
