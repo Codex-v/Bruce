@@ -116,9 +116,23 @@ jobs:
 
           cat ./platformio.ini
 
-      - name: Run Compile
+      - name: Build Firmware
         run: |
+          echo "Building firmware for ${{ matrix.board.env }}"
           platformio run -e ${{ matrix.board.env }}
+
+      - name: Build Filesystem
+        continue-on-error: true
+        run: |
+          echo "Building filesystem for ${{ matrix.board.env }}"
+          if [ -d "data" ] && [ "$(ls -A data)" ]; then
+            echo "Data folder found with files:"
+            ls -la data/
+            platformio run -e ${{ matrix.board.env }} -t buildfs
+            echo "Filesystem built successfully"
+          else
+            echo "No data folder or empty data folder, skipping filesystem build"
+          fi
 
       - name: Cache PIO
         uses: actions/cache/save@v4
@@ -127,21 +141,37 @@ jobs:
             ${{ github.workspace }}/.pio
           key: Bruce-pio-${{ matrix.board.env }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      - name: Merge files
+      - name: Merge files and create manifests
         run: |
-          # pio run -e ${{ matrix.board.env }} -t build-firmware
-          # Files are merged after build
+          echo "Creating build artifacts for ${{ matrix.board.env }}"
 
-          js_content="{\"name\":\"${{ matrix.board.env }}\",\"new_install_prompt_erase\": true,\"builds\":[{\"chipFamily\":\"${{ matrix.board.family }}\",\"improv\":false,\"parts\":[{\"path\":\"Bruce-${{ matrix.board.env }}.bin\",\"offset\":0}]}]}"
+          # Check if firmware exists and copy it
+          if [ -f ".pio/build/${{ matrix.board.env }}/firmware.bin" ]; then
+            cp ".pio/build/${{ matrix.board.env }}/firmware.bin" "Bruce-${{ matrix.board.env }}.bin"
+            echo "Firmware binary created: Bruce-${{ matrix.board.env }}.bin"
+          fi
 
+          # Check if filesystem image exists and copy it
+          if [ -f ".pio/build/${{ matrix.board.env }}/littlefs.bin" ]; then
+            cp ".pio/build/${{ matrix.board.env }}/littlefs.bin" "Bruce-${{ matrix.board.env }}-fs.bin"
+            echo "Filesystem binary created: Bruce-${{ matrix.board.env }}-fs.bin"
+          fi
+
+          # Create web installer manifest
+          js_content="{\"name\":\"Bruce ${{ matrix.board.env }}\",\"new_install_prompt_erase\": true,\"builds\":[{\"chipFamily\":\"${{ matrix.board.family }}\",\"improv\":false,\"parts\":[{\"path\":\"Bruce-${{ matrix.board.env }}.bin\",\"offset\":0}]}]}"
           echo "$js_content" > "./Bruce-${{ matrix.board.env }}.json"
+
+          # List all created files
+          ls -la Bruce-*
 
       - name: Upload ${{ matrix.board.env }}
         uses: actions/upload-artifact@v4
         with:
           name: Bruce-${{ matrix.board.env }}
-          path: Bruce-*.*
-          retention-days: 5
+          path: |
+            Bruce-*.bin
+            Bruce-*.json
+          retention-days: 7
           if-no-files-found: error
 
   post_compile_steps:
@@ -308,3 +338,4 @@ jobs:
           generate_release_notes: true
           files: |
             Bruce-*.bin
+            Bruce-*.json
