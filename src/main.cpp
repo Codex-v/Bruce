@@ -215,28 +215,35 @@ void begin_tft() {
  **  Draw boot screen
  *********************************************************************/
 void boot_screen() {
+    // Ensure proper screen dimensions are set
+    int screenWidth = tft.width();
+    int screenHeight = tft.height();
+#ifdef HAS_TOUCH
+    screenHeight -= 20; // Account for touch footer
+#endif
+
     // Clear screen with background color
     tft.fillScreen(bruceConfig.bgColor);
 
     // === Project Title ===
     tft.setTextColor(bruceConfig.priColor, bruceConfig.bgColor);
     tft.setTextSize(3); // Bigger for the title
-    tft.drawCentreString("Codex-V", tftWidth / 2, tftHeight / 4, 1);
+    tft.drawCentreString("Codex-V", screenWidth / 2, screenHeight / 4, 1);
 
     // === Tagline ===
     tft.setTextSize(1);
-    tft.drawCentreString("Ghost in the Code", tftWidth / 2, (tftHeight / 4) + 25, 1);
+    tft.drawCentreString("Build 007", screenWidth / 2, (screenHeight / 4) + 25, 1);
 
     // === Version Info ===
     tft.setTextSize(2);
-    String verInfo = "Build 007";
-    tft.drawCentreString(verInfo, tftWidth / 2, (tftHeight / 2), 1);
+    String verInfo = "Ghost in the Code";
+    tft.drawCentreString(verInfo, screenWidth / 2, (screenHeight / 2), 1);
 
     // === Loading Bar ===
-    int barWidth = tftWidth - 40;
+    int barWidth = screenWidth - 40;
     int barHeight = 10;
     int barX = 20;
-    int barY = (tftHeight / 2) + 30;
+    int barY = (screenHeight / 2) + 30;
 
     // Draw empty bar
     tft.drawRect(barX, barY, barWidth, barHeight, bruceConfig.priColor);
@@ -244,12 +251,12 @@ void boot_screen() {
     // Fill bar gradually (fake animation)
     for (int i = 0; i <= barWidth - 2; i += 4) {
         tft.fillRect(barX + 1, barY + 1, i, barHeight - 2, bruceConfig.priColor);
-        delay(15); // speed of animation
+        delay(20); // speed of animation
     }
 
     // === Footer / Author ===
     tft.setTextSize(1);
-    tft.drawCentreString("by CP", tftWidth / 2, tftHeight - 15, 1);
+    tft.drawCentreString("by CP", screenWidth / 2, screenHeight - 15, 1);
 }
 
 /*********************************************************************
@@ -259,6 +266,14 @@ void boot_screen() {
 void boot_screen_anim() {
     boot_screen();
     int i = millis();
+
+    // Ensure proper screen dimensions are set
+    int screenWidth = tft.width();
+    int screenHeight = tft.height();
+#ifdef HAS_TOUCH
+    screenHeight -= 20; // Account for touch footer
+#endif
+
     // checks for boot.jpg in SD and LittleFS for customization
     int boot_img = 0;
     bool drawn = false;
@@ -272,9 +287,9 @@ void boot_screen_anim() {
 
     tft.drawPixel(0, 0, 0);       // Forces back communication with TFT, to avoid ghosting
                                   // Start image loop
-    while (millis() < i + 7000) { // boot image lasts for 5 secs
+    while (millis() < i + 7000) { // boot image lasts for 7 secs
         if ((millis() - i > 2000) && !drawn) {
-            tft.fillRect(0, 45, tftWidth, tftHeight - 45, bruceConfig.bgColor);
+            tft.fillRect(0, 45, screenWidth, screenHeight - 45, bruceConfig.bgColor);
             if (boot_img > 0 && !drawn) {
                 tft.fillScreen(bruceConfig.bgColor);
                 if (boot_img == 5) {
@@ -306,13 +321,13 @@ void boot_screen_anim() {
         }
 #if !defined(LITE_VERSION)
         if (!boot_img && (millis() - i > 2200) && (millis() - i) < 2700)
-            tft.drawRect(2 * tftWidth / 3, tftHeight / 2, 2, 2, bruceConfig.priColor);
+            tft.drawRect(2 * screenWidth / 3, screenHeight / 2, 2, 2, bruceConfig.priColor);
         if (!boot_img && (millis() - i > 2700) && (millis() - i) < 2900)
-            tft.fillRect(0, 45, tftWidth, tftHeight - 45, bruceConfig.bgColor);
+            tft.fillRect(0, 45, screenWidth, screenHeight - 45, bruceConfig.bgColor);
         if (!boot_img && (millis() - i > 2900) && (millis() - i) < 3400)
             tft.drawXBitmap(
-                2 * tftWidth / 3 - 30,
-                5 + tftHeight / 2,
+                2 * screenWidth / 3 - 30,
+                5 + screenHeight / 2,
                 bruce_small_bits,
                 bruce_small_width,
                 bruce_small_height,
@@ -322,8 +337,8 @@ void boot_screen_anim() {
         if (!boot_img && (millis() - i > 3400) && (millis() - i) < 3600) tft.fillScreen(bruceConfig.bgColor);
         if (!boot_img && (millis() - i > 3600))
             tft.drawXBitmap(
-                (tftWidth - 238) / 2,
-                (tftHeight - 133) / 2,
+                (screenWidth - 238) / 2,
+                (screenHeight - 133) / 2,
                 bits,
                 bits_width,
                 bits_height,
