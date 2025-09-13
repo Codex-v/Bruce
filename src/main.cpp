@@ -438,8 +438,11 @@ void setup() {
     tft.setRotation(bruceConfig.rotation);
     tft.fillScreen(TFT_BLACK);
     // bruceConfig is not read yet.. just to show something on screen due to long boot time
-    tft.setTextColor(TFT_PURPLE, TFT_BLACK);
-    tft.drawCentreString("Your Secrets Aren't Safe", tft.width() / 2, tft.height() / 2, 1);
+    tft.setTextColor(TFT_RED, TFT_BLACK);
+    // Get proper screen dimensions after rotation is set
+    int screenW = tft.width();
+    int screenH = tft.height();
+    tft.drawCentreString("Your Secrets Aren't Safe", screenW / 2, screenH / 2, 1);
 #else
     tft.begin();
 #endif
